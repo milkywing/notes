@@ -1,4 +1,4 @@
-## C++ 17
+## C++17
 
 ### optional
 
@@ -10,12 +10,11 @@
 
 ### variant
 
-头文件 `variant` 提供 `std::variant(T...)` 类模板包装一个可能有多个类型的值。一个 `variant` 对象可以直接被赋值为其支持的类型的值
+头文件 `variant` 提供 `std::variant<T...>` 类模板包装一个可能有多个类型的值。一个 `variant` 对象可以直接被赋值为其支持的类型的值，由对象自动管理旧类型值的销毁和新类型值的构建
 
-访问 `variant` 对象中保存的值必须知道当前值的类型，然后通过 `std::get<T>(v)` 获取当前值的引用。或者知道当前值类型在模板实参列表的下标，然后通过 `std::get<N>(v)` 获取当前值的引用
+访问 `variant` 对象中保存的值必须知道当前值的类型，然后通过 `std::get<T>(v)` 获取当前值的引用。或者知道当前值类型在模板实参列表的下标，然后通过 `std::get<N>(v)` 获取当前值的引用。为了确定当前值的类型或类型下标，需要使用如下函数
 
-为了确定当前值的类型，可以使用如下方法
-- `std::holds_alternative<T>(v)`，返回布尔值表示当前值的类型是否为 `T`
+- `std::holds_alternative<T>(v)`，判断当前值的类型是否为 `T`
 - `v.index()`，返回当前值的类型在模板实参列表的下标
 
 ```c++
@@ -29,6 +28,34 @@ var = 2.0;
 if (var.index() == 1) {
   std::cout << std::get<1>(var); // 2.0
 }
+```
+
+为了处理 `variant` 对象，可以使用 `std::visit(callable, vars...)` 将不同类型的处理方式“打包”成一个可调用对象，根据实际的类型选择对应的处理方式。“打包”的方式可以是 `()` 运算符的重载，也可以是自带模板特性的 `auto lambda`，后者会在编译阶段生成所有可能类型的实例，确保运行时能处理所有可能的情况
+
+```c++
+template<class... Fs>
+struct overload: Fs... {
+  using Fs::operator()...;
+};
+// 将多个函数包装成一个可调用对象
+template<class... Fs>
+overload(Fs const &...) -> overload<Fs...>;
+
+std::variant<int, std::string> var = "123";
+// 1. 分发到可调用对象的不同重载上
+std::visit(overload(
+  [] (int v) {/* 处理 int 的情况 */},
+  [] (std::string v) {/* 处理 string 的情况 */},
+), var);
+
+// 2. 分发到 auto lambda 的不同实例上
+std::visit([] (auto v) {
+  if constexpr (std::is_intergral<decltype(v), int>){
+    // 处理 int 的情况
+  }else {
+    // 处理 string 的情况
+  }
+}, var);
 ```
 
 ### string_view
@@ -90,23 +117,13 @@ if (condiction) {
 }
 ```
 
-### constexpr-if
-
-在 `if` 后面加上 `constexpr` 实现条件编译，`constexpr-if` 只能接受常量表达式作为条件，并且仅在常量表达式为真时被保留。常用于模板编程
-
-```c++
-if constexpr (cp) {
-  // 该分支代码只会在常量表达式 cp 为真时保留
-}
-```
-
-### 其他
+### misc
 
 - 类模板的模板参数可以自动推导了，不用显式指定，如 `vector v = {1, 2};` 将自动推导出 `vector<int>`
 
-## C++ 20
+## C++20
 
-### 其他
+### misc
 
 - 普通函数/labmda 可以将参数声明为 `auto` 让编译器根据实参推断参数类型，其效果等价于函数模板
 - lambda 也可以模板化了，只需在捕获列表之后加上模板参数列表即可，如 `[] <typename T> (T a) {return a * 2;}`

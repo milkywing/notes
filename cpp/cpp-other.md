@@ -97,7 +97,7 @@ A::A(int n) try : share(make_shared<int>(n)) {
 
 `noexcept` 同时也是运算符，`noexcept(exp)` 返回一个布尔表示指定表达式 `exp` 是否会抛出异常
 
-> 若虚函数若做出无异常承诺，派生类中的虚函数也必须维持无异常承诺
+> 若虚函数做出无异常承诺，派生类中的虚函数也必须维持无异常承诺
 
 ```c++
 void fun_noexcept() noexcept; // 不会抛异常，等价于 void fun_noexcept() noexcept(true)

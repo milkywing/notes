@@ -184,7 +184,7 @@ testForward(std::move(x)); //实参为右值
 函数模板可以被同名其他函数模板或普通函数重载，模板实参能够推断成功的实例将额外作为可行函数参与匹配
 
 - 如果可行函数都是普通函数，则采用正常的函数匹配流程
-- 如果可行函数都是函数模板实例，则其中最特例化的版本作为最佳匹配（函数模板形参和函数实参匹配的部分越多，推断的模板实参部分越少，越特例化）
+- 如果可行函数都是函数模板实例，则其中最特例化的版本作为最佳匹配（函数模板参数和函数实参匹配的部分越多，推断的模板实参部分越少，越特例化）
 - 如果可行函数包含普通函数和函数模板实例，并且双方都提供同样好的匹配，则普通函数优先匹配
 
 ### 类模板
@@ -240,9 +240,9 @@ A<int>(v.begin(), v.end()); // 类模板实参被指定为 int，成员函数模
 一个含参数包的==模式==可以在后面加上 `...` 进行==扩展==，等效于对参数包中每个实参分别应用该模式并用逗号分隔
 
 ```c++
-template<typename... Args> // Args 为模板参数包
+template<typename ...Args> // Args 为模板参数包
 // 对模式 const Args& 进行模板参数包扩展，若模板实参为 int, double 将扩展出 const int&, const double&
-void fun(const Args&... rest) {
+void fun(const Args& ...rest) {
   // 获取参数包中参数数量，返回常量表达式
   cout << sizeof...(Args) << endl;
 }
@@ -258,8 +258,8 @@ void print(const T &v) {
 	cout << v;
 }
 
-template<typename T, typename... Args>
-void print(const T& v, const Args&... rest) {
+template<typename T, typename ...Args>
+void print(const T& v, const Args& ...rest) {
   cout << v;
 	// 函数包扩展，让包中的第一个参数在下一次递归中被消耗，剩余参数作为下一次的参数包
 	print(rest...);
@@ -272,7 +272,7 @@ void print(const T& v, const Args&... rest) {
 class Container {
 public:
   // 为了实现实参转发，函数形参需要为 T&& 的形式，以此为模式进行模板参数包扩展
-	template<typename... Args> void emplace_back(Args&&... args) {
+	template<typename ...Args> void emplace_back(Args&& ...args) {
     // 以模式 std::forward<Args>(args) 进行函数包扩展，等效于对每个函数实参进行转发
     alloc.construct(first_free++, std::forward<Args>(args)...);
   }
